@@ -118,7 +118,7 @@ RUN \
         gstreamer1.0-* libopenal1 libsndfile1 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# 🔥 Intel VAAPI – ALL generations supported
+# Intel VAAPI
 RUN \
     apt-get update && \
     apt-get install -y --no-install-recommends \
