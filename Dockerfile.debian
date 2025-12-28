@@ -5,7 +5,7 @@ LABEL maintainer="Josh.5 <jsunnex@gmail.com>"
 ARG DEBIAN_FRONTEND=noninteractive
 RUN \
     echo "**** Update apt database ****" \
-        && sed -i '/^Components: main/ s/$/ contrib non-free non-free-firmware/' /etc/apt/sources.list.d/debian.sources \
+        && sed -i '/^Components: main/ s/$/ contrib non-free/' /etc/apt/sources.list.d/debian.sources \
     && \
     echo
 
@@ -218,69 +218,6 @@ RUN \
     && \
     echo
 
-# Install desktop environment
-RUN \
-    echo "**** Update apt database ****" \
-        && apt-get update \
-    && \
-    echo "**** Install desktop requirements ****" \
-        && apt-get install -y --no-install-recommends \
-            libdbus-1-3 \
-            libegl1 \
-            libgtk-3-0 \
-            libgtk2.0-0 \
-            libsdl2-2.0-0 \
-    && \
-    echo "**** Install desktop environment ****" \
-        && apt-get install -y \
-            fonts-vlgothic \
-            gedit \
-            imagemagick \
-            msttcorefonts \
-            xdg-utils \
-            xfce4 \
-            xfce4-terminal \
-        && rm -f \
-            /usr/share/applications/software-properties-drivers.desktop \
-            /usr/share/applications/xfce4-about.desktop \
-            /usr/share/applications/xfce4-session-logout.desktop \
-    && \
-    echo "**** Section cleanup ****" \
-        && apt-get clean autoclean -y \
-        && apt-get autoremove -y \
-        && rm -rf \
-            /var/lib/apt/lists/* \
-            /var/tmp/* \
-            /tmp/* \
-    && \
-    echo
-
-# --- Intel Battlemage userspace (Mesa + Vulkan) ---
-RUN \
-    apt-get update \
-    && apt-get install -y --no-install-recommends \
-        mesa-utils \
-        mesa-va-drivers \
-        mesa-vulkan-drivers \
-        libdrm2 \
-        libdrm-intel1 \
-        libgbm1 \
-        libegl-mesa0 \
-        libgl1-mesa-dri \
-        vulkan-tools \
-        vulkan-validationlayers \
-    && apt-get clean autoclean -y \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-# --- Intel Battlemage firmware ---
-RUN \
-    apt-get update \
-    && apt-get install -y --no-install-recommends \
-        firmware-intel-graphics \
-        firmware-misc-nonfree \
-    && apt-get clean autoclean -y \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
 # Setup video streaming deps (Battlemage-safe)
 RUN \
     echo "**** Update apt database ****" \
@@ -292,7 +229,6 @@ RUN \
             libva2 \
             libva-drm2 \
             libva-x11-2 \
-            vainfo \
     && \
     echo "**** Section cleanup ****" \
         && apt-get clean autoclean -y \
@@ -304,12 +240,77 @@ RUN \
     && \
     echo
 
-# Intel GPU environment (Battlemage)
-ENV \
-    LIBVA_DRIVER_NAME=iHD \
-    VDPAU_DRIVER=va_gl \
-    MESA_LOADER_DRIVER_OVERRIDE=iris \
-    VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/intel_icd.x86_64.json
+ENV LIBVA_DRIVER_NAME=iHD
+
+# Install tools for monitoring hardware
+RUN \
+    echo "**** Update apt database ****" \
+        && apt-get update \
+    && \
+    echo "**** Install useful HW monitoring tools ****" \
+        && apt-get install -y --no-install-recommends \
+            cpu-x \
+            htop \
+            vainfo \
+            vdpauinfo \
+    && \
+    echo "**** Section cleanup ****" \
+        && apt-get clean autoclean -y \
+        && apt-get autoremove -y \
+        && rm -rf \
+            /var/lib/apt/lists/* \
+            /var/tmp/* \
+            /tmp/* \
+    && \
+    echo
+
+# Install Steam
+RUN \
+    echo "**** Update apt database ****" \
+        && dpkg --add-architecture i386 \
+        && apt-get update \
+    && \
+    echo "**** Install Steam ****" \
+        && apt-get install -y --no-install-recommends \
+            steam-installer \
+        && ln -sf /usr/games/steam /usr/bin/steam \
+    && \
+    echo "**** Section cleanup ****" \
+        && apt-get clean autoclean -y \
+        && apt-get autoremove -y \
+        && rm -rf \
+            /var/lib/apt/lists/* \
+            /var/tmp/* \
+            /tmp/* \
+    && \
+    echo
+
+# Install Sunshine
+RUN \
+    echo "**** Update apt database ****" \
+        && apt-get update \
+    && \
+    echo "**** Install Sunshine requirements ****" \
+        && apt-get install -y \
+            va-driver-all \
+    && \
+    echo "**** Download latest Sunshine release ****" \
+        && SUNSHINE_RELEASE=$(curl -sX GET "https://api.github.com/repos/LizardByte/Sunshine/releases/latest" | jq -r '.tag_name') \
+        && SUNSHINE_URL=$(curl -sX GET "https://api.github.com/repos/LizardByte/Sunshine/releases/latest" | jq -r '.assets[] | select(.name | contains("sunshine-debian-trixie-amd64.deb")) | .browser_download_url') \
+        && wget -O /usr/src/sunshine.deb "${SUNSHINE_URL}" \
+    && \
+    apt-get install -y /usr/src/sunshine.deb \
+    && \
+    apt-get clean autoclean -y \
+    && \
+    rm -rf /var/lib/apt/lists/*
+
+# TODO: Deprecate neko
+COPY --from=m1k1o/neko:base /usr/bin/neko /usr/bin/neko
+COPY --from=m1k1o/neko:base /var/www /var/www
+
+# Add FS overlay
+COPY overlay /
 
 # Set container configuration environment variables
 ENV \
@@ -327,14 +328,11 @@ ENV \
     ENABLE_WOL_POWER_MANAGER="false" \
     ENABLE_SID="false"
 
-# Configure required ports
 ENV \
     PORT_NOVNC_WEB="8083" \
     NEKO_NAT1TO1=""
 
-# Expose the required ports
 EXPOSE 8083
 
-# Set entrypoint
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
