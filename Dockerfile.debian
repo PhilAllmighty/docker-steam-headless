@@ -292,7 +292,7 @@ RUN \
             libva2 \
             libva-drm2 \
             libva-x11-2 \
-            vainfo
+            vainfo \
     && \
     echo "**** Section cleanup ****" \
         && apt-get clean autoclean -y \
