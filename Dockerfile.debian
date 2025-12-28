@@ -288,10 +288,11 @@ RUN \
     && \
     echo "**** Install Intel media drivers and VAAPI ****" \
         && apt-get install -y --no-install-recommends \
-            intel-media-driver \
+            intel-media-va-driver-non-free \
             libva2 \
             libva-drm2 \
             libva-x11-2 \
+            vainfo
     && \
     echo "**** Section cleanup ****" \
         && apt-get clean autoclean -y \
