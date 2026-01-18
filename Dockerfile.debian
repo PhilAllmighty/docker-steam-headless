@@ -24,7 +24,10 @@ RUN \
     echo "**** Section cleanup ****" \
         && apt-get clean autoclean -y \
         && apt-get autoremove -y \
-        && rm -rf /var/lib/apt/lists/* /var/tmp/* /tmp/* \
+        && rm -rf \
+            /var/lib/apt/lists/* \
+            /var/tmp/* \
+            /tmp/* \
     && \
     echo
 ENV \
@@ -44,7 +47,10 @@ RUN \
     echo "**** Section cleanup ****" \
         && apt-get clean autoclean -y \
         && apt-get autoremove -y \
-        && rm -rf /var/lib/apt/lists/* /var/tmp/* /tmp/* \
+        && rm -rf \
+            /var/lib/apt/lists/* \
+            /var/tmp/* \
+            /tmp/* \
     && \
     echo
 
@@ -55,22 +61,51 @@ RUN \
     && \
     echo "**** Install tools ****" \
         && apt-get install -y --no-install-recommends \
-            bash bash-completion curl git jq less man-db plocate nano \
-            net-tools p7zip-full patch pciutils pkg-config procps psmisc \
-            psutils rsync screen sudo unzip vim wget xmlstarlet xz-utils \
+            bash \
+            bash-completion \
+            curl \
+            git \
+            jq \
+            less \
+            man-db \
+            plocate \
+            nano \
+            net-tools \
+            p7zip-full \
+            patch \
+            pciutils \
+            pkg-config \
+            procps \
+            psmisc \
+            psutils \
+            rsync \
+            screen \
+            sudo \
+            unzip \
+            vim \
+            wget \
+            xmlstarlet \
+            xz-utils \
     && \
     echo "**** Install python ****" \
         && apt-get install -y --no-install-recommends \
-            python3 python3-numpy python3-pip python3-setuptools python3-venv \
+            python3 \
+            python3-numpy \
+            python3-pip \
+            python3-setuptools \
+            python3-venv \
     && \
     echo "**** Section cleanup ****" \
         && apt-get clean autoclean -y \
         && apt-get autoremove -y \
-        && rm -rf /var/lib/apt/lists/* /var/tmp/* /tmp/* \
+        && rm -rf \
+            /var/lib/apt/lists/* \
+            /var/tmp/* \
+            /tmp/* \
     && \
     echo
 
-# Configure default user
+# Configure default user and set user env
 ENV \
     PUID=99 \
     PGID=100 \
@@ -81,150 +116,338 @@ ENV \
     TZ="Pacific/Auckland" \
     USER_LOCALES="en_US.UTF-8 UTF-8"
 RUN \
-    mkdir -p ${USER_HOME} \
-    && useradd -d ${USER_HOME} -s /bin/bash ${USER} \
-    && chown -R ${USER} ${USER_HOME} \
-    && echo "${USER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+    echo "**** Configure default user '${USER}' ****" \
+        && mkdir -p \
+            ${USER_HOME} \
+        && useradd -d ${USER_HOME} -s /bin/bash ${USER} \
+        && chown -R ${USER} \
+            ${USER_HOME} \
+        && echo "${USER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers \
+    && \
+    echo
 
 # Install supervisor
 RUN \
-    apt-get update \
-    && apt-get install -y supervisor \
-    && apt-get clean autoclean -y \
-    && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/* /var/tmp/* /tmp/*
+    echo "**** Update apt database ****" \
+        && apt-get update \
+    && \
+    echo "**** Install supervisor ****" \
+        && apt-get install -y \
+            supervisor \
+    && \
+    echo "**** Section cleanup ****" \
+        && apt-get clean autoclean -y \
+        && apt-get autoremove -y \
+        && rm -rf \
+            /var/lib/apt/lists/* \
+            /var/tmp/* \
+            /tmp/* \
+    && \
+    echo
 
-# X Server
+# Install X Server requirements
+# TODO: Refine this list of packages to only what is required.
 ENV \
     XORG_SOCKET_DIR="/tmp/.X11-unix" \
     XDG_RUNTIME_DIR="/tmp/.X11-unix/run" \
     XDG_SESSION_TYPE="x11" \
     FORCE_X11_DUMMY_CONFIG="false"
 RUN \
-    apt-get update \
-    && apt-get install -y --no-install-recommends \
-        avahi-utils dbus-x11 libxcomposite-dev libxcursor1 wmctrl libfuse2 \
-        x11-utils x11-xfs-utils x11-xkb-utils x11-xserver-utils x11vnc \
-        xauth xbindkeys xclip xcvt xdotool xfonts-base xinit xorg \
-        xserver-xorg-core xserver-xorg-input-evdev \
-        xserver-xorg-input-libinput xserver-xorg-legacy \
-        xserver-xorg-video-all xserver-xorg-video-dummy \
-    && apt-get clean autoclean -y \
-    && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/* /var/tmp/* /tmp/*
+    echo "**** Update apt database ****" \
+        && apt-get update \
+    && \
+    echo "**** Install X Server requirements ****" \
+        && apt-get install -y --no-install-recommends \
+            avahi-utils \
+            dbus-x11 \
+            libxcomposite-dev \
+            libxcursor1 \
+            wmctrl \
+            libfuse2 \
+            x11-utils \
+            x11-xfs-utils \
+            x11-xkb-utils \
+            x11-xserver-utils \
+            x11vnc \
+            xauth \
+            xbindkeys \
+            xclip \
+            xcvt \
+            xdotool \
+            xfonts-base \
+            xinit \
+            xorg \
+            xserver-xorg-core \
+            xserver-xorg-input-evdev \
+            xserver-xorg-input-libinput \
+            xserver-xorg-legacy \
+            xserver-xorg-video-all \
+            xserver-xorg-video-dummy \
+    && \
+    echo "**** Section cleanup ****" \
+        && apt-get clean autoclean -y \
+        && apt-get autoremove -y \
+        && rm -rf \
+            /var/lib/apt/lists/* \
+            /var/tmp/* \
+            /tmp/* \
+    && \
+    echo
 
-# Audio
+# Install audio requirements
 ENV \
     PULSE_SOCKET_DIR="/tmp/pulse" \
     PULSE_SERVER="unix:/tmp/pulse/pulse-socket"
 RUN \
-    apt-get update \
-    && apt-get install -y --no-install-recommends \
-        pulseaudio alsa-utils libasound2 libasound2-plugins \
-    && apt-get clean autoclean -y \
-    && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/* /var/tmp/* /tmp/*
+    echo "**** Update apt database ****" \
+        && apt-get update \
+    && \
+    echo "**** Install pulseaudio requirements ****" \
+        && apt-get install -y --no-install-recommends \
+            pulseaudio \
+            alsa-utils \
+            libasound2 \
+            libasound2-plugins \
+    && \
+    echo "**** Section cleanup ****" \
+        && apt-get clean autoclean -y \
+        && apt-get autoremove -y \
+        && rm -rf \
+            /var/lib/apt/lists/* \
+            /var/tmp/* \
+            /tmp/* \
+    && \
+    echo
 
-# Desktop
+# Install desktop environment
+# TODO: Specify all needed packages and add '--no-install-recommends'
 RUN \
-    apt-get update \
-    && apt-get install -y --no-install-recommends \
-        libdbus-1-3 libegl1 libgtk-3-0 libgtk2.0-0 libsdl2-2.0-0 \
-    && apt-get install -y \
-        fonts-vlgothic gedit imagemagick msttcorefonts xdg-utils \
-        xfce4 xfce4-terminal \
-    && apt-get clean autoclean -y \
-    && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/* /var/tmp/* /tmp/*
+    echo "**** Update apt database ****" \
+        && apt-get update \
+    && \
+    echo "**** Install desktop requirements ****" \
+        && apt-get install -y --no-install-recommends \
+            libdbus-1-3 \
+            libegl1 \
+            libgtk-3-0 \
+            libgtk2.0-0 \
+            libsdl2-2.0-0 \
+    && \
+    echo "**** Install desktop environment ****" \
+        && apt-get install -y \
+            fonts-vlgothic \
+            gedit \
+            imagemagick \
+            msttcorefonts \
+            xdg-utils \
+            xfce4 \
+            xfce4-terminal \
+        # Delete these as they are not needed at all
+        && rm -f \
+            /usr/share/applications/software-properties-drivers.desktop \
+            /usr/share/applications/xfce4-about.desktop \
+            /usr/share/applications/xfce4-session-logout.desktop \
+        # Hide these apps. They can be displayed if a user really wants them.
+        && [ -f /usr/share/applications/xfce4-accessibility-settings.desktop ] && sed -i '/[Desktop Entry]/a\NoDisplay=true' /usr/share/applications/xfce4-accessibility-settings.desktop || true \
+        && [ -f /usr/share/applications/xfce4-color-settings.desktop ] && sed -i '/[Desktop Entry]/a\NoDisplay=true' /usr/share/applications/xfce4-color-settings.desktop || true \
+        && [ -f /usr/share/applications/xfce4-mail-reader.desktop ] && sed -i '/[Desktop Entry]/a\NoDisplay=true' /usr/share/applications/xfce4-mail-reader.desktop || true \
+        && [ -f /usr/share/applications/xfce4-web-browser.desktop ] && sed -i '/[Desktop Entry]/a\NoDisplay=true' /usr/share/applications/xfce4-web-browser.desktop || true \
+        && [ -f /usr/share/applications/vim.desktop ] && sed -i '/[Desktop Entry]/a\NoDisplay=true' /usr/share/applications/vim.desktop || true \
+        && [ -f /usr/share/applications/thunar-settings.desktop ] && sed -i '/[Desktop Entry]/a\NoDisplay=true' /usr/share/applications/thunar-settings.desktop || true \
+        && [ -f /usr/share/applications/thunar.desktop ] && sed -i '/[Desktop Entry]/a\NoDisplay=true' /usr/share/applications/thunar.desktop || true \
+        && [ -f /usr/share/applications/pavucontrol.desktop ] && sed -i '/[Desktop Entry]/a\NoDisplay=true' /usr/share/applications/pavucontrol.desktop || true \
+        && [ -f /usr/share/applications/x11vnc.desktop ] && sed -i '/[Desktop Entry]/a\NoDisplay=true' /usr/share/applications/x11vnc.desktop || true \
+        && [ -f /usr/share/applications/display-im6.q16.desktop ] && sed -i '/[Desktop Entry]/a\NoDisplay=true' /usr/share/applications/display-im6.q16.desktop || true \
+        # These are named specifically for Debain
+        && [ -f /usr/share/applications/debian-xterm.desktop ] && sed -i '/[Desktop Entry]/a\NoDisplay=true' /usr/share/applications/debian-xterm.desktop || true \
+        && [ -f /usr/share/applications/debian-uxterm.desktop ] && sed -i '/[Desktop Entry]/a\NoDisplay=true' /usr/share/applications/debian-uxterm.desktop || true \
+        # Force these apps to be "System" Apps rather than "Categories=System;Utility;Core;GTK;Filesystem;"
+        && [ -f /usr/share/applications/xfce4-appfinder.desktop ] && sed -i 's/^Categories=.*$/Categories=System;/' /usr/share/applications/xfce4-appfinder.desktop || true \
+        && [ -f /usr/share/applications/thunar-bulk-rename.desktop ] && sed -i 's/^Categories=.*$/Categories=System;/' /usr/share/applications/thunar-bulk-rename.desktop || true \
+        && [ -f /usr/share/applications/org.gnome.gedit.desktop ] && sed -i 's/^Categories=.*$/Categories=System;/' /usr/share/applications/org.gnome.gedit.desktop || true \
+    && \
+    echo "**** Install WoL Manager requirements ****" \
+        && apt-get install -y \
+            tcpdump \
+            xprintidle \
+    && \
+    echo "**** Section cleanup ****" \
+        && apt-get clean autoclean -y \
+        && apt-get autoremove -y \
+        && rm -rf \
+            /var/lib/apt/lists/* \
+            /var/tmp/* \
+            /tmp/* \
+    && \
+    echo
 
-# Flatpak + D-Bus
+# Add support for flatpaks and D-Bus system services
 ENV \
     XDG_DATA_DIRS="/home/default/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share/:/usr/share/"
 RUN \
-    apt-get update \
-    && apt-get install -y --no-install-recommends \
-        accountsservice polkitd pkexec flatpak gnome-software-plugin-flatpak \
-    && flatpak remote-add flathub https://flathub.org/repo/flathub.flatpakrepo \
-    && dpkg-statoverride --update --add root root 0755 /usr/bin/bwrap \
-    && apt-get clean autoclean -y \
-    && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/* /var/tmp/* /tmp/*
+    echo "**** Update apt database ****" \
+        && apt-get update \
+    && \
+    echo "**** Install D-Bus system services for desktop integration ****" \
+        && apt-get install -y --no-install-recommends \
+            accountsservice \
+            polkitd \
+            pkexec \
+    && \
+    echo "**** Install flatpak support ****" \
+        && apt-get install -y --no-install-recommends \
+            flatpak \
+            gnome-software-plugin-flatpak \
+    && \
+    echo "**** Configure flatpak ****" \
+        && flatpak remote-add flathub https://flathub.org/repo/flathub.flatpakrepo \
+        && dpkg-statoverride --update --add root root 0755 /usr/bin/bwrap \
+    && \
+    echo "**** Section cleanup ****" \
+        && apt-get clean autoclean -y \
+        && apt-get autoremove -y \
+        && rm -rf \
+            /var/lib/apt/lists/* \
+            /var/tmp/* \
+            /tmp/* \
+    && \
+    echo
 
-# -------------------------------
-# Intel Battlemage (Xe2) Graphics
-# -------------------------------
+# Setup video streaming deps
 RUN \
-    apt-get update \
-    && apt-get install -y --no-install-recommends \
-        mesa-utils \
-        mesa-va-drivers \
-        mesa-vulkan-drivers \
-        libegl-mesa0 \
-        libgl1-mesa-dri \
-        libglx-mesa0 \
-        libdrm2 \
-        libdrm-intel1 \
-        intel-media-va-driver-non-free \
-        va-driver-all \
-        vulkan-tools \
-    && apt-get clean autoclean -y \
-    && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/* /var/tmp/* /tmp/*
+    echo "**** Update apt database ****" \
+        && apt-get update \
+    && \
+    echo "**** Install Intel Battlemage (Xe2) graphics stack ****" \
+        && apt-get install -y --no-install-recommends \
+            mesa-utils \
+            mesa-va-drivers \
+            mesa-vulkan-drivers \
+            libegl-mesa0 \
+            libgl1-mesa-dri \
+            libglx-mesa0 \
+            libdrm2 \
+            libdrm-intel1 \
+            intel-media-va-driver-non-free \
+            va-driver-all \
+            vulkan-tools \
+    && \
+    echo "**** Section cleanup ****" \
+        && apt-get clean autoclean -y \
+        && apt-get autoremove -y \
+        && rm -rf \
+            /var/lib/apt/lists/* \
+            /var/tmp/* \
+            /tmp/* \
+    && \
+    echo
 
 ENV \
     MESA_LOADER_DRIVER_OVERRIDE=iris \
     LIBVA_DRIVER_NAME=iHD \
     VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/intel_icd.x86_64.json
 
-# Monitoring tools
+# Install tools for monitoring hardware
 RUN \
-    apt-get update \
-    && apt-get install -y --no-install-recommends \
-        cpu-x htop vainfo vdpauinfo \
-    && apt-get clean autoclean -y \
-    && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/* /var/tmp/* /tmp/*
+    echo "**** Update apt database ****" \
+        && apt-get update \
+    && \
+    echo "**** Install useful HW monitoring tools ****" \
+        && apt-get install -y --no-install-recommends \
+            cpu-x \
+            htop \
+            vainfo \
+            vdpauinfo \
+    && \
+    echo "**** Section cleanup ****" \
+        && apt-get clean autoclean -y \
+        && apt-get autoremove -y \
+        && rm -rf \
+            /var/lib/apt/lists/* \
+            /var/tmp/* \
+            /tmp/* \
+    && \
+    echo
 
-# Steam
+# Install Steam
 RUN \
-    dpkg --add-architecture i386 \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends steam-installer \
-    && ln -sf /usr/games/steam /usr/bin/steam \
-    && apt-get clean autoclean -y \
-    && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/* /var/tmp/* /tmp/*
+    echo "**** Update apt database ****" \
+        && dpkg --add-architecture i386 \
+        && apt-get update \
+    && \
+    echo "**** Install Steam ****" \
+        && apt-get install -y --no-install-recommends \
+            steam-installer \
+        && ln -sf /usr/games/steam /usr/bin/steam \
+    && \
+    echo "**** Section cleanup ****" \
+        && apt-get clean autoclean -y \
+        && apt-get autoremove -y \
+        && rm -rf \
+            /var/lib/apt/lists/* \
+            /var/tmp/* \
+            /tmp/* \
+    && \
+    echo
 
-# Sunshine
+# Install Sunshine
 RUN \
-    apt-get update \
-    && apt-get install -y va-driver-all \
-    && SUNSHINE_URL=$(curl -s https://api.github.com/repos/LizardByte/Sunshine/releases/latest \
-        | jq -r '.assets[] | select(.name | contains("trixie-amd64.deb")) | .browser_download_url') \
-    && wget -O /usr/src/sunshine.deb "$SUNSHINE_URL" \
-    && apt-get install -y /usr/src/sunshine.deb \
-    && apt-get clean autoclean -y \
-    && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/* /var/tmp/* /tmp/*
+    echo "**** Update apt database ****" \
+        && apt-get update \
+    && \
+    echo "**** Install Sunshine requirements ****" \
+        && apt-get install -y \
+            va-driver-all \
+    && \
+    echo "**** Download latest Sunshine release ****" \
+        && SUNSHINE_RELEASE=$(curl -sX GET "https://api.github.com/repos/LizardByte/Sunshine/releases/latest" | jq -r '.tag_name') \
+        && SUNSHINE_URL=$(curl -sX GET "https://api.github.com/repos/LizardByte/Sunshine/releases/latest" | jq -r '.assets[] | select(.name | contains("sunshine-debian-trixie-amd64.deb")) | .browser_download_url') \
+        && echo "Downloading Sunshine ${SUNSHINE_RELEASE} from ${SUNSHINE_URL}" \
+        && wget -O /usr/src/sunshine.deb "${SUNSHINE_URL}" \
+    && \
+    echo "**** Install Sunshine ****" \
+        && apt-get install -y \
+            /usr/src/sunshine.deb \
+    && \
+    echo "**** Section cleanup ****" \
+        && apt-get clean autoclean -y \
+        && apt-get autoremove -y \
+        && rm -rf \
+            /var/lib/apt/lists/* \
+            /var/tmp/* \
+            /tmp/* \
+    && \
+    echo
 
-# Neko
+# TODO: Deprecate neko
+# Install Neko server
 COPY --from=m1k1o/neko:base /usr/bin/neko /usr/bin/neko
 COPY --from=m1k1o/neko:base /var/www /var/www
 
-# dumb-init + dumb-udev
+# Various other tools
 ARG DUMB_INIT_VERSION=1.2.5
 ARG DUMB_UDEV_VERSION=64d1427
 RUN \
-    wget -qO /usr/bin/dumb-init \
-        https://github.com/Yelp/dumb-init/releases/download/v${DUMB_INIT_VERSION}/dumb-init_${DUMB_INIT_VERSION}_x86_64 \
-    && chmod +x /usr/bin/dumb-init \
-    && python3 -m pip install --break-system-packages --no-cache-dir \
-        git+https://github.com/Steam-Headless/dumb-udev.git@${DUMB_UDEV_VERSION}
+    echo "**** Install dumb-init ****" \
+        && wget --no-check-certificate --no-cookies --quiet \
+            -O /usr/bin/dumb-init \
+            https://github.com/Yelp/dumb-init/releases/download/v${DUMB_INIT_VERSION}/dumb-init_${DUMB_INIT_VERSION}_x86_64 \
+        && chmod +x /usr/bin/dumb-init \
+    && \
+    echo "**** Install dumb-udev ****" \
+        && python3 -m pip install \
+            --break-system-packages \
+            --pre \
+            --upgrade \
+            --no-cache-dir \
+            git+https://github.com/Steam-Headless/dumb-udev.git@${DUMB_UDEV_VERSION} \
+    && \
+    echo
 
-# Overlay
+# Add FS overlay
 COPY overlay /
 
-# Display
+# Set display environment variables
 ENV \
     DISPLAY_CDEPTH="24" \
     DISPLAY_REFRESH="120" \
@@ -232,12 +455,12 @@ ENV \
     DISPLAY_SIZEW="1600" \
     DISPLAY_VIDEO_PORT="DFP" \
     DISPLAY=":55"
-
 ENV \
     NVIDIA_DRIVER_CAPABILITIES="all" \
     NVIDIA_VISIBLE_DEVICES="all"
 
-# Container config
+# Set container configuration environment variables
+# TODO: Set the default WEBUI_USER & WEBUI_PASS after release of SHUI
 ENV \
     MODE="primary" \
     WEB_UI_MODE="vnc" \
@@ -253,11 +476,14 @@ ENV \
     ENABLE_WOL_POWER_MANAGER="false" \
     ENABLE_SID="false"
 
+# Configure required ports
 ENV \
     PORT_NOVNC_WEB="8083" \
     NEKO_NAT1TO1=""
 
+# Expose the required ports
 EXPOSE 8083
 
+# Set entrypoint
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
